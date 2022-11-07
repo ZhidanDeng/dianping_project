@@ -31,7 +31,6 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
 
     public Result queryTypeList() {
         final List<String> shopTypeList = stringRedisTemplate.opsForList().range(RedisConstants.TYPE_SHOP_KEY, 0, -1);
-        System.out.println(shopTypeList);
         if (!ObjectUtils.isEmpty(shopTypeList)) {
             if (shopTypeList.get(0).equals("1")) {
                 return Result.ok("程序错误，未找到商铺类型数据！！！");
@@ -45,7 +44,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         List<ShopType> typeList = query().orderByAsc("sort").list();
         if (ObjectUtils.isEmpty(typeList)) {
             stringRedisTemplate.opsForList().leftPush(RedisConstants.TYPE_SHOP_KEY, "1");
-            stringRedisTemplate.expire(RedisConstants.TYPE_SHOP_KEY, RedisConstants.LOCK_SHOP_TTL, TimeUnit.MINUTES);
+            stringRedisTemplate.expire(RedisConstants.TYPE_SHOP_KEY, RedisConstants.LOCK_SHOP_TTL, TimeUnit.SECONDS);
             return Result.ok("程序错误，未找到商铺类型数据！！！");
         }
 
