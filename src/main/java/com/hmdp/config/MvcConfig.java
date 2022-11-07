@@ -1,6 +1,7 @@
 package com.hmdp.config;
 
 import com.hmdp.utils.LoginInterceptor;
+import com.hmdp.utils.RefreshTokenInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.AccessType;
@@ -21,7 +22,8 @@ public class MvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor(stringRedisTemplate))
+        // 登陆拦截器
+        registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
                         "/voucher/**",
                         "/upload/**",
@@ -30,6 +32,10 @@ public class MvcConfig implements WebMvcConfigurer {
                         "/user/code",
                         "/user/login",
                         "/blog/hot"
-                );
+                ).order(1);
+        // token刷新拦截器
+        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate))
+                .addPathPatterns("/**")
+                .order(0);
     }
 }
