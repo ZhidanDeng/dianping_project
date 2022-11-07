@@ -56,9 +56,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!PhoneUtil.isMobile(phone)) {
            return Result.fail("手机号格式错误！");
         }
-
+        log.debug("code：{} ,sessionCode：{}", code, loginForm.getCode());
         // 校验验证码
-        if (ObjectUtils.isEmpty(code) || !RegexUtils.isCodeInvalid(loginForm.getCode())
+        if (ObjectUtils.isEmpty(code) || RegexUtils.isCodeInvalid(loginForm.getCode())
                 || !loginForm.getCode().equals(code)) {
             return Result.fail("验证码错误！");
         }
