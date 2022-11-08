@@ -50,6 +50,7 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
             return Result.fail("优惠券已经抢光了！");
         }
         final Long userId = UserHolder.getUser().getId();
+        // 单体应用处理方式
         synchronized (userId.toString().intern()) {
             // 获取代理对象，避免事务失效
             final IVoucherOrderService proxy = (IVoucherOrderService)AopContext.currentProxy();
