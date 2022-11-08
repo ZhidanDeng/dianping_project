@@ -8,6 +8,7 @@ import com.hmdp.entity.Shop;
 import com.hmdp.mapper.ShopMapper;
 import com.hmdp.service.IShopService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisConstants;
 import com.hmdp.utils.RedisData;
 import com.hmdp.utils.SystemConstants;
@@ -34,6 +35,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IShopService {
 
+    @Resource
+    private CacheClient cacheClient;
+
     private static final ExecutorService CACHERE_BUILD_EXECUTOR = Executors.newFixedThreadPool(10);
 
     @Resource
@@ -41,20 +45,24 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
     @Override
     public Result queryById(Long id) {
-        // 缓存穿透
+        // 解决缓存穿透
 //        Shop shop = queryWithPassThrough(id);
+//        Shop shop = cacheClient.queryWithPassThrough(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
         // 互斥锁解决缓存击穿
 //        Shop shop = queryWithMutex(id);
         // 逻辑过期解决缓存击穿
-        Shop shop = queryWithLogicalExpire(id);
+//        Shop shop = queryWithLogicalExpire(id);
+        Shop shop = cacheClient.queryWithLogicalExpire(RedisConstants.CACHE_SHOP_KEY, id, Shop.class, this::getById, RedisConstants.CACHE_SHOP_TTL, TimeUnit.MINUTES);
+
         if (shop == null) {
-            Result.fail("店铺不存在");
+            return Result.fail("店铺不存在");
         }
         return Result.ok(shop);
     }
 
+
     /**
-     * 缓存击穿
+     * 互斥锁解决缓存击穿
      *
      * @param id
      * @return
@@ -104,7 +112,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 缓存穿透
+     * 存空值解决缓存穿透
      *
      * @param id
      * @return
@@ -136,7 +144,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
 
 
     /**
-     * 逻辑过期
+     * 逻辑过期解决缓存击穿
      *
      * @param id
      * @return
@@ -209,7 +217,7 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
     }
 
     /**
-     * 封装店铺逻辑过期时间数据
+     * 封装店铺逻辑过期时间数据(提前加载数据到redis)
      *
      * @param id
      * @param expireSeconds
