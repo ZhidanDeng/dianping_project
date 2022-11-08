@@ -52,7 +52,8 @@ public class VoucherOrderServiceImpl extends ServiceImpl<VoucherOrderMapper, Vou
         final boolean success = iSeckillVoucherService.update().setSql("stock = stock-1")
                 .eq("voucher_id", voucherId)
                 // 乐观锁解决超卖问题
-                .eq("stock", voucher.getStock())
+//                .eq("stock", voucher.getStock())
+                .gt("stock", 0)
                 .update();
         if (!success) {
             return Result.fail("扣减库存失败");
