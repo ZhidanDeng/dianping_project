@@ -190,6 +190,11 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
         return shop;
     }
 
+    /**
+     * 使用事务保证数据一致性
+     * @param shop
+     * @return
+     */
     @Override
     @Transactional
     public Result updateShop(Shop shop) {

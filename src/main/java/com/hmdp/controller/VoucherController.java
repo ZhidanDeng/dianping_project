@@ -36,6 +36,7 @@ public class VoucherController {
 
     /**
      * 新增秒杀券
+     * {"shopId":1,"title":"100元代金券","subTitle":"周一至周五均可使用","rules":"全场通用\n无需预约\n可无限叠加\n不兑现、不找零\n仅限堂食","payValue":8000,"actualValue":10000,"type":1,"stock":100,"beginTime":"2022-11-08T10:09:17","endTime":"2029-01-11T12:09:17"}
      * @param voucher 优惠券信息，包含秒杀信息
      * @return 优惠券id
      */
