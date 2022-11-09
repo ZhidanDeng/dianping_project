@@ -11,8 +11,16 @@ import java.util.concurrent.TimeUnit;
  * @Author wandaren
  */
 public interface ILock {
-
+    /**
+     * 获取锁
+     * @param timeoutSec  超时时间
+     * @param unit  时间单位
+     * @return  是否成功获取到锁
+     */
     boolean tryLock(long timeoutSec, TimeUnit unit);
 
+    /**
+     * 释放锁
+     */
     void unLock();
 }
