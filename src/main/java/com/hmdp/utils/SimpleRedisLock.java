@@ -44,7 +44,7 @@ public class SimpleRedisLock implements ILock {
     }
 
     //    @Override
-//    public void unLock() {
+//    public void unlock() {
 //        // 获取线程标识
 //        final String threadId = ID_PREFIX + Thread.currentThread().getId();
 //        // 获取存放到id标识
@@ -55,7 +55,7 @@ public class SimpleRedisLock implements ILock {
 //        }
 //    }
     @Override
-    public void unLock() {
+    public void unlock() {
         // 获取线程标识
         final String threadId = ID_PREFIX + Thread.currentThread().getId();
         // 调用lua脚本
