@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 /**
- *数据库判断
+ *数据库判断，购买资格与库存
  *
  * @author wandaren
  * @since 2021-12-22

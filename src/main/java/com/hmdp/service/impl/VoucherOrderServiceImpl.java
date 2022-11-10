@@ -24,7 +24,7 @@ import java.util.Collections;
 import java.util.concurrent.*;
 
 /**
- * redis判断
+ * redis判断，购买资格与库存
  *
  * @author wandaren
  * @since 2021-12-22
