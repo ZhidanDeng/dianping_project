@@ -31,10 +31,12 @@ public class RedissonConfig {
     @Bean
     public RedissonClient redissonClient2(){
         // 配置
-        Config config = new Config();
-        config.useSingleServer().setAddress("redis://114.67.111.175:6379")
-                .setPassword("qifeng");
+//        Config config = new Config();
+//        config.useSingleServer().setAddress("redis://114.67.111.175:6379")
+//                .setPassword("qifeng");
         // 创建RedissonClient对象
-        return Redisson.create(config);
+//        return Redisson.create(config);
+
+        return null;
     }
 }
