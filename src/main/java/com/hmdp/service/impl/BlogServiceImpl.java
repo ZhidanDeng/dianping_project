@@ -70,14 +70,50 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         return Result.ok(blog);
     }
 
+    //    private void isBlogLiked(Blog blog) {
+//        //1、获取登陆用户
+//        final Long userId = UserHolder.getUser().getId();
+//        //2、判断当前登录用户是否已经点赞
+//        String key = RedisConstants.BLOG_LIKED_KEY + blog.getId();
+//        final Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
+//        blog.setIsLike(BooleanUtil.isTrue(member));
+//    }
     private void isBlogLiked(Blog blog) {
         //1、获取登陆用户
         final Long userId = UserHolder.getUser().getId();
         //2、判断当前登录用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + blog.getId();
-        final Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
-        blog.setIsLike(BooleanUtil.isTrue(member));
+        final Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+        blog.setIsLike(score != null);
     }
+
+//    @Override
+//    public Result likeBlog(Long id) {
+//        //1、获取登陆用户
+//        final Long userId = UserHolder.getUser().getId();
+//        //2、判断当前登录用户是否已经点赞
+//        String key = RedisConstants.BLOG_LIKED_KEY + id;
+//        final Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
+//        if (BooleanUtil.isFalse(member)) {
+//            //3、如果未点赞，可以点赞
+//            //3.1、数据库点赞数+1
+//            final boolean isUpdate = update().setSql("liked = liked + 1").eq("id", id).update();
+//            //3.2、保存用户到redis的set集合
+//            log.error("isUpdate---------" + isUpdate);
+//            if (isUpdate) {
+//                stringRedisTemplate.opsForSet().add(key, userId.toString());
+//            }
+//        } else {
+//            //4、如果已点赞，取消之前点赞
+//            //4.1、数据库点赞-1
+//            final boolean isUpdate = update().setSql("liked = liked - 1").eq("id", id).update();
+//            //4.2、把用户从redis的set集合中移除
+//            if (isUpdate) {
+//                stringRedisTemplate.delete(key);
+//            }
+//        }
+//        return Result.ok();
+//    }
 
     @Override
     public Result likeBlog(Long id) {
@@ -85,21 +121,21 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
         final Long userId = UserHolder.getUser().getId();
         //2、判断当前登录用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + id;
-        final Boolean member = stringRedisTemplate.opsForSet().isMember(key, userId.toString());
-        if (BooleanUtil.isFalse(member)) {
+        final Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
+        if (score == null) {
             //3、如果未点赞，可以点赞
             //3.1、数据库点赞数+1
             final boolean isUpdate = update().setSql("liked = liked + 1").eq("id", id).update();
-            //3.2、保存用户到redis的set集合
+            //3.2、保存用户到redis的zSet集合
             log.error("isUpdate---------" + isUpdate);
             if (isUpdate) {
-                stringRedisTemplate.opsForSet().add(key, userId.toString());
+                stringRedisTemplate.opsForZSet().add(key, userId.toString(), System.currentTimeMillis());
             }
         } else {
             //4、如果已点赞，取消之前点赞
             //4.1、数据库点赞-1
             final boolean isUpdate = update().setSql("liked = liked - 1").eq("id", id).update();
-            //4.2、把用户从redis的set集合中移除
+            //4.2、把用户从redis的zSet集合中移除
             if (isUpdate) {
                 stringRedisTemplate.delete(key);
             }
