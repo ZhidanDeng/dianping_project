@@ -13,8 +13,10 @@ import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -52,8 +54,7 @@ public class ShopTypeServiceImpl extends ServiceImpl<ShopTypeMapper, ShopType> i
         typeList.forEach(type ->
                 list.add(JSONUtil.toJsonStr(type))
         );
-        stringRedisTemplate.opsForList().leftPushAll(RedisConstants.TYPE_SHOP_KEY, list);
-
+        stringRedisTemplate.opsForList().rightPushAll(RedisConstants.TYPE_SHOP_KEY, list);
         return Result.ok(typeList);
     }
 }
