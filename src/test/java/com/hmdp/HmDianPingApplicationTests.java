@@ -123,4 +123,23 @@ class HmDianPingApplicationTests {
 
         }
     }
+
+    /**
+     * UV统计-HyperLogLog
+     */
+    @Test
+    void testHyperLogLog() {
+        String[] values = new String[1000];
+        int j;
+        for (int i = 0; i < 1000000; i++) {
+            j = i % 1000;
+            values[j] = "user_" + i;
+            if (j == 999) {
+                stringRedisTemplate.opsForHyperLogLog().add("hl2", values);
+            }
+        }
+        // 统计
+        final Long hl2 = stringRedisTemplate.opsForHyperLogLog().size("hl2");
+        System.out.println(hl2);
+    }
 }
