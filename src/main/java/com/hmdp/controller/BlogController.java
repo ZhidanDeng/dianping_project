@@ -76,6 +76,6 @@ public class BlogController {
 
     @GetMapping("/likes/{id}")
     public Result likesBlog(@PathVariable("id") Long id) {
-        return Result.fail("功能尚未实现");
+        return blogService.queryBlogLikes(id);
     }
 }

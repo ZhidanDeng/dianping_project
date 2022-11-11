@@ -1,8 +1,11 @@
 package com.hmdp.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.BooleanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Blog;
 import com.hmdp.entity.User;
 import com.hmdp.mapper.BlogMapper;
@@ -14,9 +17,13 @@ import com.hmdp.utils.SystemConstants;
 import com.hmdp.utils.UserHolder;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import javax.annotation.Resource;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -80,7 +87,12 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 //    }
     private void isBlogLiked(Blog blog) {
         //1、获取登陆用户
-        final Long userId = UserHolder.getUser().getId();
+        final UserDTO user = UserHolder.getUser();
+        if (user == null) {
+            // 用户未登录，直接返回
+            return;
+        }
+        final Long userId = user.getId();
         //2、判断当前登录用户是否已经点赞
         String key = RedisConstants.BLOG_LIKED_KEY + blog.getId();
         final Double score = stringRedisTemplate.opsForZSet().score(key, userId.toString());
@@ -109,7 +121,7 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
 //            final boolean isUpdate = update().setSql("liked = liked - 1").eq("id", id).update();
 //            //4.2、把用户从redis的set集合中移除
 //            if (isUpdate) {
-//                stringRedisTemplate.delete(key);
+//                stringRedisTemplate.opsForSet().remove(key, userId.toString());
 //            }
 //        }
 //        return Result.ok();
@@ -137,9 +149,28 @@ public class BlogServiceImpl extends ServiceImpl<BlogMapper, Blog> implements IB
             final boolean isUpdate = update().setSql("liked = liked - 1").eq("id", id).update();
             //4.2、把用户从redis的zSet集合中移除
             if (isUpdate) {
-                stringRedisTemplate.delete(key);
+                stringRedisTemplate.opsForZSet().remove(key, userId.toString());
             }
         }
         return Result.ok();
+    }
+
+    @Override
+    public Result queryBlogLikes(Long id) {
+        //查询top5数据
+        String key = RedisConstants.BLOG_LIKED_KEY + id;
+        final Set<String> top5 = stringRedisTemplate.opsForZSet().range(key, 0, 4);
+        if (ObjectUtils.isEmpty(top5)) {
+            return Result.ok(Collections.emptyList());
+        }
+        // 解析用户id
+        final List<Long> ids = top5.stream().map(Long::valueOf).collect(Collectors.toList());
+        String idStr = StrUtil.join(",",ids);
+        final List<UserDTO> userDTOS = userService.query().in("id",ids)
+                .last("order by field(id," + idStr + ")").list()
+                .stream()
+                .map(user -> BeanUtil.copyProperties(user, UserDTO.class))
+                .collect(Collectors.toList());
+        return Result.ok(userDTOS);
     }
 }
