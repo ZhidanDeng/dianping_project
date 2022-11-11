@@ -37,6 +37,6 @@ public class RedissonConfig {
         // 创建RedissonClient对象
 //        return Redisson.create(config);
 
-        return null;
+        return redissonClient();
     }
 }

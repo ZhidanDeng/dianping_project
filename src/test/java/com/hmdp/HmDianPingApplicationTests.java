@@ -2,6 +2,7 @@ package com.hmdp;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
+import com.hmdp.entity.Shop;
 import com.hmdp.entity.VoucherOrder;
 import com.hmdp.service.impl.ShopServiceImpl;
 import com.hmdp.utils.RedisConstants;
@@ -13,14 +14,21 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.geo.Point;
+import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.connection.stream.*;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.domain.geo.GeoLocation;
 
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @SpringBootTest
 class HmDianPingApplicationTests {
@@ -32,8 +40,7 @@ class HmDianPingApplicationTests {
     RedisWorker redisWorker;
     @Resource
     RedissonClient redissonClient;
-    @Resource
-    RedissonClient redissonClient2;
+
 
     private RLock lock;
     @BeforeEach
@@ -96,20 +103,24 @@ class HmDianPingApplicationTests {
     }
 
     @Test
-    void name3() {
-        String queueName = "stream.orders";
-        List<MapRecord<String, Object, Object>> list = stringRedisTemplate.opsForStream().read(
-                // GROUP g1 c1
-                Consumer.from("g1", "c1"),
-                // COUNT 1 BLOCK 2000
-                StreamReadOptions.empty().count(1).block(Duration.ofSeconds(2)),
-                // STREAMS s1 >
-                StreamOffset.create(queueName, ReadOffset.lastConsumed())
-        );
-        final MapRecord<String, Object, Object> record = list.get(0);
-        Map<Object, Object> value = record.getValue();
-        final VoucherOrder voucherOrder = BeanUtil.fillBeanWithMap(value, new VoucherOrder(), true);
-        System.out.println(JSONUtil.toJsonStr(voucherOrder));
+    void loadShopData() {
+       // 查询店铺信息
+        final List<Shop> list = service.list();
+        // 把店铺分组，按照typeId分，ID一致的放到一个集合
+        final Map<Long, List<Shop>> map = list.stream().collect(Collectors.groupingBy(Shop::getTypeId));
+        // 分批完成写入redis
+        for (Map.Entry<Long, List<Shop>> entry : map.entrySet()) {
+            final Long typeId = entry.getKey();
+            String key = RedisConstants.SHOP_GEO_KEY + typeId;
+            // 获取同类型店铺
+            final List<Shop> value = entry.getValue();
+            // 写入redis
+            List<RedisGeoCommands.GeoLocation<String>> locations = new ArrayList<>(value.size());
+            for (Shop shop : value) {
+                locations.add(new RedisGeoCommands.GeoLocation<>(shop.getId().toString(), new Point(shop.getX(), shop.getY())));
+            }
+            stringRedisTemplate.opsForGeo().add(key, locations);
 
+        }
     }
 }
