@@ -1,3 +1,5 @@
+https://www.bilibili.com/video/BV1cr4y1671t
+B站黑马程序员Redis实战项目黑马点评
 - resources/db存放数据库表
 - resources/hmdp 前端项目
 - resources/nginx.conf nginx配置
