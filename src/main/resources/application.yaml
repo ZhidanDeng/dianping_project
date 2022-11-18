@@ -9,7 +9,7 @@ spring:
     username: wq
     password: 123456
   redis:
-    host: 172.16.156.139
+    host: 172.16.156.148
     port: 6379
     password: qifeng
     lettuce:
