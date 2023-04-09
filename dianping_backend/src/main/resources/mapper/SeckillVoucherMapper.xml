@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dzd.dp.mapper.SeckillVoucherMapper">
+<update id="updateStock" parameterType="java.lang.Long">
+    update hmdp.tb_seckill_voucher
+    set stock = stock-1
+    where voucher_id = #{voucherId} and stock > 0
+</update>
+</mapper>
